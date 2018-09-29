@@ -1,7 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {Button, Container, Form} from 'react-bootstrap';
-
+import {connect} from 'react-redux';
+import {updateUsuario} from '../state/actions/UsuarioActions';
 
 class Configuracoes extends React.Component {
 
@@ -70,5 +71,18 @@ class Configuracoes extends React.Component {
     }
 }
 
+const mapStateToProps = (state) => {
+    return {
+        usuarioLogado: state.usuario.usuarioAtual
+    }
+}
 
-export default Configuracoes;
+const mapDispatchToProps = (dispatch) => {
+    return {
+        onSave: (usuario) => {
+            return dispatch(updateUsuario(usuario))
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Configuracoes);

@@ -8,17 +8,21 @@ const UserService = {
         if (!currentUser)
             return Promise.reject();
         return firebase.firestore().doc(`/users/${userToFollow.uid}/followers/${currentUser.uid}`)
-            .set({timestamp: firebase.firestore.FieldValue.serverTimestamp()})
+            .set({ timestamp: firebase.firestore.FieldValue.serverTimestamp() })
     },
     updateUserData: (userData) => {
         const currentUser = AuthService.getCurrentUser();
         if (!currentUser)
             return Promise.reject();
-        return firebase.firestore().doc(`/users/${currentUser.uid}`).set(userData, {merge: true})
+        return firebase.firestore().doc(`/users/${currentUser.uid}`).set(userData, { merge: true })
     },
     getUserData: (userId) =>
         firebase.firestore().doc(`/users/${userId}`).get()
             .then(user => user.data()),
+    getAllUsers: () =>
+        firebase.firestore().collection('/users')
+            .get()
+            .then(users => users.docs.map(user => user.data())),
     searchUser: (searchText) =>
         firebase.firestore().collection('/users')
             .get()

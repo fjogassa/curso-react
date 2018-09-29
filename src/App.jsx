@@ -7,72 +7,41 @@ import Perfil from './pages/Perfil';
 import Configuracoes from './pages/Configuracoes'
 import NotFound from './pages/NotFound';
 import { Route, Switch, withRouter } from 'react-router-dom';
+import AuthService from './services/AuthService';
+import createStore from './createStore';
+import { Provider } from 'react-redux';
+import { usuarioLogin, usuarioLogout } from './state/actions/UsuarioActions';
+
+const store = createStore({});
 
 class App extends Component {
-  constructor(props) {
-    super(props);
 
-    this.state = {
-      currentUser: undefined,
-      tweets: []
-    }
-  }
-
-  onLogin = () => {
-    this.setState({
-      currentUser: {
-        uid: '1234',
-        userName: 'luizaugustocs',
-        displayName: 'Luiz Augusto',
-        photoURL: 'https://www.bookmydesign.com/auth-image/medium/blank-user.png',
-        email: 'luizaugustocsouza@gmail.com'
+  componentDidMount() {
+    AuthService.onAuthChange((authUser) => {
+      if (authUser) {
+        store.dispatch(usuarioLogin(authUser))
+      }
+      else {
+        store.dispatch(usuarioLogout())
       }
     });
-  };
 
-  onLogout = () => {
-    this.setState({ currentUser: undefined }, () => {
-      this.props.history.push('/')
-    });
-  };
-
-  onPostTweet = (tweet) => {
-    this.setState(state => ({
-      tweets: [tweet, ...state.tweets]
-    }))
   }
-  onSaveConfiguracao = (updatedUser) => {
-    return new Promise(resolve => {
-      this.setState({
-        currentUser: { ...updatedUser }
-      }, () => {
-        resolve()
-      })
-
-    })
-  };
 
   render() {
-    const { currentUser, tweets } = this.state;
     return (
       <div>
-        <Header currentUser={currentUser} onLogin={this.onLogin}
-                onLogout={this.onLogout} />
-        <Switch>
-          <Route path="/" exact
-                 render={props => <Home {...props} tweets={tweets} currentUser={currentUser}
-                                        onTweet={this.onPostTweet}
-                 />}
-          /><Route path="/perfil/:id" exact
-                   render={props => <Perfil {...props} currentUser={currentUser}
-                   />}
-        />
-          <Route path="/configuracao" exact
-                 render={props => <Configuracoes {...props} currentUser={currentUser}
-                                                 onSave={this.onSaveConfiguracao} />}
-          />
-          <Route component={NotFound} />
-        </Switch>
+        <Provider store={store}>
+          <React.Fragment>
+            <Header />
+            <Switch>
+              <Route path="/" exact component={Home} />
+              <Route path="/perfil/:id" exact component={Perfil} />
+              <Route path="/configuracao" exact component={Configuracoes} />
+              <Route component={NotFound} />
+            </Switch>
+          </React.Fragment>
+        </Provider>
       </div>
     );
   }

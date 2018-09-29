@@ -1,65 +1,77 @@
-import React, {Component} from 'react';
-import {Button, Container, Row} from 'react-bootstrap';
+import React, { Component } from 'react';
+import { Button, Container, Row } from 'react-bootstrap';
 import ListaTweet from '../components/ListaTweet';
+import UserService from '../services/UserService';
+import TweetService from '../services/TweetService';
+import Loading from '../components/Loading';
 
 class Perfil extends Component {
 
     state = {
-        tweets: [{
-            content: 'Teste 3',
-            uid: '3',
-            author: '1234',
-            timestamp: Date.now(),
-            authorName: 'Luiz Augusto',
-            authorUserName: 'luizaugustocs',
-            authorPhotoURL: 'https://www.bookmydesign.com/auth-image/medium/blank-user.png'
-        }, {
-            content: 'Teste 2',
-            uid: '2',
-            author: '1234',
-            timestamp: Date.now() - 500000,
-            authorName: 'Luiz Augusto',
-            authorUserName: 'luizaugustocs',
-            authorPhotoURL: 'https://www.bookmydesign.com/auth-image/medium/blank-user.png'
-        }, {
-            content: 'Teste 1',
-            uid: '1',
-            author: '1234',
-            timestamp: Date.now() - 1000000,
-            authorName: 'Luiz Augusto',
-            authorUserName: 'luizaugustocs',
-            authorPhotoURL: 'https://www.bookmydesign.com/auth-image/medium/blank-user.png'
-        }],
-        user: {
-            uid: '1234',
-            photoURL: 'https://www.bookmydesign.com/auth-image/medium/blank-user.png',
-            userName: 'luizaugustocs',
-            displayName: 'Luiz Augusto',
-            email: 'luizaugustocsouza@gmail.com'
-        }
+        loading: false,
+        tweets: [],
+        user: {}
     };
 
+    componentDidMount() {
+        const { id } = this.props.match.params;
+
+        this.setState({ loading: true }, () => {
+
+            UserService.getUserData(id)
+                .then(user => {
+                    this.setState({ user: user })
+                    return user;
+                })
+                .then(user => TweetService.getUserTweets(user))
+                .then(tweets => this.setState({ tweets, loading: false }))
+
+            // UserService.getUserData(id)
+            //     .then(user => {
+            //         this.setState({user: user})
+            //         TweetService.getUserTweets(user)
+            //             .then(tweets => {
+            //                 this.setState({tweets: tweets, loading: false})
+            //             })
+            //     })            
+        })
+    }
+
     render() {
-        const {user, tweets} = this.state;
+        const { user, tweets, loading } = this.state;
+        const { currentUser, onFollow } = this.props;
+
+        if (loading) {
+            return (
+                <div className="lds-container">
+                    <Loading />
+                </div>
+            )
+        }
+
+        const shouldShowFollowButton = currentUser !== undefined && user !== undefined && currentUser.uid !== user.uid;
+
         return (
             <Container>
                 <Row className="profile-section">
                     <img src={user.photoURL} alt="foto do perfil do usuário"
-                         className="profile-photo"/>
+                        className="profile-photo" />
                     <div className="profile-data">
                         <span>{user.displayName}</span>
                         <span>{`@${user.userName}`}</span>
                     </div>
-                    <div className="ml-auto">
-                        <Button>Seguir</Button>
-                    </div>
+                    {shouldShowFollowButton ? (
+                        <div className="ml-auto">
+                            <Button onClick={() => onFollow(user)}>Seguir</Button>
+                        </div>                    
+                    ): null}
                 </Row>
                 <Row>
-                    <ListaTweet tweets={tweets}/>
-                </Row>
+                        <ListaTweet tweets={tweets} />
+                    </Row>
             </Container>
-        );
-    }
-}
-
-export default Perfil;
+                );
+            }
+        }
+        
+        export default Perfil;
